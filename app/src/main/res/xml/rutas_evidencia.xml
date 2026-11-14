@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Solo la carpeta privada de evidencias se comparte, y solo con la cámara durante la foto. -->
+<paths>
+    <files-path name="evidencias" path="evidencias/"/>
+</paths>

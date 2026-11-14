@@ -1,0 +1,263 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "b9cf0ae00a31deee7dafd8a09cf81dd0",
+    "entities": [
+      {
+        "tableName": "entregas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `version` INTEGER NOT NULL, `pedido` TEXT NOT NULL, `rutaId` TEXT, `cliente` TEXT NOT NULL, `direccion` TEXT NOT NULL, `telefono` TEXT NOT NULL, `fechaPrevista` TEXT NOT NULL, `productos` TEXT NOT NULL, `descargadaEn` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pedido",
+            "columnName": "pedido",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rutaId",
+            "columnName": "rutaId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cliente",
+            "columnName": "cliente",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "direccion",
+            "columnName": "direccion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "telefono",
+            "columnName": "telefono",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaPrevista",
+            "columnName": "fechaPrevista",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productos",
+            "columnName": "productos",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descargadaEn",
+            "columnName": "descargadaEn",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "capturas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clave` TEXT NOT NULL, `entregaId` TEXT NOT NULL, `versionBase` INTEGER NOT NULL, `autorId` TEXT NOT NULL, `fechaReal` TEXT NOT NULL, `pesoRecibido` TEXT NOT NULL, `unidad` TEXT NOT NULL, `conforme` INTEGER NOT NULL, `receptor` TEXT NOT NULL, `observacion` TEXT NOT NULL, `estado` TEXT NOT NULL, `recepcionId` TEXT, `fechaSincronizacion` TEXT, `motivo` TEXT, `creadaEn` INTEGER NOT NULL, PRIMARY KEY(`clave`))",
+        "fields": [
+          {
+            "fieldPath": "clave",
+            "columnName": "clave",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entregaId",
+            "columnName": "entregaId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "versionBase",
+            "columnName": "versionBase",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "autorId",
+            "columnName": "autorId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaReal",
+            "columnName": "fechaReal",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pesoRecibido",
+            "columnName": "pesoRecibido",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unidad",
+            "columnName": "unidad",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "conforme",
+            "columnName": "conforme",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receptor",
+            "columnName": "receptor",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observacion",
+            "columnName": "observacion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estado",
+            "columnName": "estado",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recepcionId",
+            "columnName": "recepcionId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fechaSincronizacion",
+            "columnName": "fechaSincronizacion",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "motivo",
+            "columnName": "motivo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "creadaEn",
+            "columnName": "creadaEn",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "clave"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_capturas_entregaId",
+            "unique": false,
+            "columnNames": [
+              "entregaId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_capturas_entregaId` ON `${TABLE_NAME}` (`entregaId`)"
+          },
+          {
+            "name": "index_capturas_estado",
+            "unique": false,
+            "columnNames": [
+              "estado"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_capturas_estado` ON `${TABLE_NAME}` (`estado`)"
+          }
+        ]
+      },
+      {
+        "tableName": "evidencias",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `clave` TEXT NOT NULL, `ruta` TEXT NOT NULL, `orden` INTEGER NOT NULL, FOREIGN KEY(`clave`) REFERENCES `capturas`(`clave`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clave",
+            "columnName": "clave",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ruta",
+            "columnName": "ruta",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orden",
+            "columnName": "orden",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_evidencias_clave",
+            "unique": false,
+            "columnNames": [
+              "clave"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_evidencias_clave` ON `${TABLE_NAME}` (`clave`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "capturas",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "clave"
+            ],
+            "referencedColumns": [
+              "clave"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b9cf0ae00a31deee7dafd8a09cf81dd0')"
+    ]
+  }
+}

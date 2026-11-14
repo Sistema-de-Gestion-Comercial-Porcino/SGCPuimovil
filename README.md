@@ -1,6 +1,6 @@
 # SGCPuimovil
 
-Base Android Kotlin del Sistema de Gestión Comercial Porcino. Consume la misma API que la web. Sprint 1: acceso online, renovación de sesión y pantalla «Mis entregas» vacía.
+Aplicación Android Kotlin del Sistema de Gestión Comercial Porcino. Consume la misma API que la web. Sprint 1: acceso online y renovación de sesión. Sprint 3: descarga de entregas asignadas, captura de la recepción sin conexión y sincronización.
 
 ## Equipo
 
@@ -44,10 +44,35 @@ El APK debug permite HTTP para pruebas en red local. Release solo permite HTTPS.
 - Token cifrado mediante AES-GCM y clave de Android Keystore; no se guarda la contraseña.
 - Verificación de sesión mediante `GET auth/yo`; sesión vencida requiere nuevo acceso.
 - Cierre mediante API, sin borrar almacenamiento de otras funciones.
-- Estado «No hay reparto descargado». No simula asignaciones ni operaciones offline.
+- Estado «No hay reparto descargado» mientras no se descarguen entregas. No simula asignaciones.
 - Mensajes de error de conexión y reintento.
 
-No incluye todavía Room, descarga de entregas, evidencias, captura sin conexión ni sincronización; corresponden al Sprint 3. No requiere acceso a la base de datos desde el teléfono: todo pasa por la API.
+No requiere acceso a la base de datos desde el teléfono: todo pasa por la API.
+
+## Sprint 3 · Captura sin conexión y sincronización (S3-P2)
+
+Contrato consumido, tal como está en el README de SGCPapi:
+
+| Endpoint | Uso en la app |
+|---|---|
+| `GET mis-entregas` | Descarga solo las entregas DESPACHADAS a domicilio del responsable autenticado. Sin descargar no hay nada que capturar |
+| `POST recepciones/sincronizar` | Envía cada captura con clave única, versión base, autor, fecha real UTC, peso con unidad, conformidad, receptor, observación y de 1 a 3 fotos JPEG |
+| `GET recepciones/{id}` | Consulta si un conflicto ya fue aplicado o descartado por una persona en la web |
+| `POST rutas/{id}/finalizar` | Solo se ofrece cuando la ruta no tiene capturas sin enviar en el teléfono |
+
+**Room (RNF-01).** `BaseLocal` guarda las entregas descargadas, las capturas y la ruta de cada evidencia. Las fotos van a `files/evidencias`, almacenamiento privado de la app, nunca a la galería (RNF-03); se reducen a JPEG de hasta 500 KiB. La captura local no cambia la entrega, el inventario ni la deuda: el servidor decide. La pantalla muestra cuántas capturas faltan enviar, el último envío y los conflictos, y avisa que lo no enviado se pierde si se borra la app o se pierde el teléfono.
+
+**Command.** `ComandoEnvio` / `ComandoRecepcion` son la orden; `ColaRecepciones` el invocador; `ClienteRecepcionAPI` el receptor; `AlmacenPendientes` la persistencia. La cola envía una captura por solicitud, en el orden en que se capturaron, y se detiene si no hay red para conservar el orden. El cuerpo se arma siempre igual desde lo guardado, así que el reintento manda la misma clave y el mismo contenido.
+
+**State.** `EstadoEnvio` con `Pendiente`, `Enviando`, `Confirmada`, `Conflicto` y `Descartada`, según el diagrama `16_OperacionPendiente_Estados`. «Ya existe» es éxito. Sin red, 409 o error 5xx vuelven a Pendiente. Un conflicto no se reenvía: sale a Confirmada o Descartada solo cuando una persona lo resuelve en el servidor. Un rechazo por regla (por ejemplo `EVIDENCIA_INVALIDA`) queda en Conflicto con el motivo, sin bloquear las demás capturas. ENTREGADA u OBSERVADA solo se muestran con la captura Confirmada: no hay forma de llegar a entregada sin sincronizar.
+
+**Sincronización.** Con la app abierta: al guardar una captura, al recuperar la red o con «Sincronizar ahora». No hay envío en segundo plano con la app cerrada. Requiere sesión válida; sin señal se puede abrir la app y capturar lo ya descargado aunque la sesión haya vencido.
+
+Pruebas unitarias (27): transiciones válidas e inválidas del State, orden de la cola, reintento sin duplicar, conflicto que no se reenvía, rechazo que no bloquea, sesión vencida, Room real con Robolectric (la captura sobrevive al cierre) y formato de peso y fechas.
+
+Prueba manual del 14 de noviembre de 2026 en un TECNO CK7n con Android 14, contra la API local y MySQL 8.0, sin cable. Se descargaron las entregas con wifi, se cortó toda la señal (modo avión y wifi apagado) y se capturaron tres recepciones: dos conformes y una con observación. La app se cerró y se reabrió, y las tres seguían pendientes. Al volver el wifi se enviaron solas y en orden. En MySQL quedaron tres recepciones con tres claves distintas, una foto cada una, las dos conformes en ENTREGADA y la observada en OBSERVADA, con la fecha real y la de sincronización separadas.
+
+Lo que no cubren las pruebas automáticas y se prueba a mano: modo avión real en el teléfono. Con el cable USB y `adb reverse` el teléfono sigue llegando a la API aunque esté en modo avión, así que esa prueba se hace sin el puente USB.
 
 La ejecución y prueba de acceso en un dispositivo debe documentarse por separado de la compilación del APK. Un build correcto no demuestra el funcionamiento en un teléfono físico.
 
@@ -89,6 +114,7 @@ Más reciente arriba.
 
 | Versión | Fecha | Sprint | Cambio | Autor |
 |---|---|---|---|---|
+| v3.2.0 | 2026-11-14 | 3 | Captura de recepción sin conexión con Room, evidencia privada, cola Command, estados State y sincronización contra `recepciones/sincronizar` | Angel Sebastian Eguez Mur |
 | v1.0.1 | 2026-11-07 | 1 | Corrección: el esquema de versiones aclara que MENOR es el número de parte y que la etiqueta de cierre del sprint es `vN.4.0` | Dario Haziel Tambo Parra |
 | v1.0.0 | 2026-11-06 | 1 | Documentación: la aplicación no accede a la base de datos, de modo que el cambio de motor no la afecta | Dario Haziel Tambo Parra |
 | v.0.1.0 | 2026-11-06 | 1 | Acceso con dirección de API configurable y base técnica del proyecto Android | Dario Haziel Tambo Parra |
