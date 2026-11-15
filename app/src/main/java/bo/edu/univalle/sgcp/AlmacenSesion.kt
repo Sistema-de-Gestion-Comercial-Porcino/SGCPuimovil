@@ -11,7 +11,8 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-data class SesionGuardada(val token: String, val expira: String, val nombre: String, val url: String)
+/** usuarioId es el autor de cada captura (RNF-01); puede faltar en sesiones guardadas antes del Sprint 3. */
+data class SesionGuardada(val token: String, val expira: String, val nombre: String, val url: String, val usuarioId: String? = null)
 class AlmacenSesion(context: Context) {
     private val datos = context.getSharedPreferences("sesion", Context.MODE_PRIVATE)
     private val alias = "sgcp.sesion"
