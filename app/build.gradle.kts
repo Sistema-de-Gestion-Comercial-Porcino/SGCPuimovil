@@ -9,8 +9,8 @@ android {
         applicationId = "bo.edu.univalle.sgcp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "3.2.0"
+        versionCode = 3
+        versionName = "5.2.0"
         buildConfigField("String", "API_BASE_URL", "\"${providers.gradleProperty("SGCP_API_URL").getOrElse("http://10.0.2.2:5081/api/v1/")}\"")
     }
     buildFeatures { buildConfig = true }
