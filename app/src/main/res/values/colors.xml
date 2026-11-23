@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mismos tonos que la web (SGCPuiweb, site.css) -->
+    <color name="sgcp_verde">#174B3E</color>
+    <color name="sgcp_verde_oscuro">#0F3B31</color>
+    <color name="sgcp_crema">#F5F1E7</color>
+    <color name="sgcp_arcilla">#B86643</color>
+</resources>
