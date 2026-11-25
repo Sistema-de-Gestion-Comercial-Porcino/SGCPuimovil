@@ -48,6 +48,13 @@ fun tonoEntrega(estado: EstadoEnvio?, conforme: Boolean?): Tono = when (estado) 
     else -> Tono.AVISO
 }
 
+/**
+ * Quién usa la app: cualquiera con permiso para administrar entregas (ENTREGA y los perfiles de gestión que pueden
+ * ser responsables de una entrega). Se decide por el permiso y no por el nombre del rol: el rol ADMINISTRACION
+ * desapareció con los perfiles jerárquicos y la app había quedado cerrada para ellos.
+ */
+fun puedeRepartir(perfil: Perfil): Boolean = "entregas.administrar" in perfil.permisos || "ENTREGA" in perfil.roles
+
 object Enlaces {
     /** «tel:» con solo dígitos y un «+» inicial. Null si no queda un número marcable. */
     fun telefono(texto: String?): String? {

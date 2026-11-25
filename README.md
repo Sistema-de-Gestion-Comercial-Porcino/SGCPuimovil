@@ -32,15 +32,21 @@ En el acceso escribe la URL base, terminada en `/api/v1/`:
 
 - Emulador Android hacia API en el equipo anfitrión: `http://10.0.2.2:5081/api/v1/`.
 - Teléfono físico: `http://IP_DEL_EQUIPO_API:5081/api/v1/` en la misma red; la API debe escuchar en esa interfaz y el firewall permitir la conexión.
-- Servidor desplegado: dirección HTTPS con certificado válido.
+- Servidor desplegado: dirección HTTPS con certificado válido. El teléfono no acepta certificados autofirmados.
 
-También puede configurarse al compilar con `-PSGCP_API_URL=https://servidor/api/v1/`. La edición local se conserva en preferencias. Cambiarla no comparte credenciales de forma automática: el usuario debe iniciar sesión de nuevo.
+También puede configurarse al compilar, para que el APK ya venga apuntando al servidor:
+
+```bash
+./gradlew assembleDebug -PSGCP_API_URL=https://dominio-del-servidor/api/v1/
+```
+
+El APK queda en `app/build/outputs/apk/debug/app-debug.apk`. La edición local se conserva en preferencias. Cambiarla no comparte credenciales de forma automática: el usuario debe iniciar sesión de nuevo.
 
 El APK debug permite HTTP para pruebas en red local. Release solo permite HTTPS. No desactivar la validación de certificados.
 
 ## Funciones
 
-- Acceso contra `POST auth/login` con cuenta ENTREGA o ADMINISTRACION.
+- Acceso contra `POST auth/login` con una cuenta que pueda administrar entregas: el perfil **ENTREGA** y los de gestión que pueden ser responsables de una entrega (ADMINISTRADOR, PROPIETARIO, SUPERADMIN). Se decide por el permiso `entregas.administrar`, no por el nombre del rol.
 - Token cifrado mediante AES-GCM y clave de Android Keystore; no se guarda la contraseña.
 - Verificación de sesión mediante `GET auth/yo`; sesión vencida requiere nuevo acceso.
 - Cierre mediante API, sin borrar almacenamiento de otras funciones.
@@ -146,6 +152,7 @@ Más reciente arriba.
 
 | Versión | Fecha | Sprint | Cambio | Autor |
 |---|---|---|---|---|
+| v5.2.1 | 2026-11-25 | 5 | Corrección (S-4): el acceso a la app se decide por el permiso `entregas.administrar` y no por el rol ADMINISTRACION, que ya no existe con los perfiles jerárquicos; el README indica cómo compilar el APK apuntando al servidor con `-PSGCP_API_URL` | Angel Sebastian Eguez Mur |
 | v5.2.0 | 2026-11-23 | 5 | Interfaz con los colores y el logo de la web, ícono propio, indicador de señal, selector de fecha y hora, miniaturas de evidencia, llamar y ver en mapa, lista de capturas del teléfono, borrador que sobrevive a la cámara y «Atrás» que no cierra el formulario | Angel Sebastian Eguez Mur |
 | v3.2.0 | 2026-11-14 | 3 | Captura de recepción sin conexión con Room, evidencia privada, cola Command, estados State y sincronización contra `recepciones/sincronizar` | Angel Sebastian Eguez Mur |
 | v1.0.1 | 2026-11-07 | 1 | Corrección: el esquema de versiones aclara que MENOR es el número de parte y que la etiqueta de cierre del sprint es `vN.4.0` | Dario Haziel Tambo Parra |

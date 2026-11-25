@@ -374,7 +374,7 @@ class MainActivity : Activity() {
                     entrar.isEnabled = true; entrar.text = "Ingresar"
                     val r = response.body()
                     if (!response.isSuccessful || r == null) { mensajeError.mostrar(mensaje(response)); return }
-                    if (!r.usuario.roles.any { it == "ENTREGA" || it == "ADMINISTRACION" }) {
+                    if (!puedeRepartir(r.usuario)) {
                         Conexion.crear(direccion).salir("Bearer " + r.token).enqueue(silencio())
                         mensajeError.mostrar("Esta aplicación está destinada al personal de reparto."); return
                     }
@@ -418,7 +418,7 @@ class MainActivity : Activity() {
             override fun onResponse(call: Call<Perfil>, response: Response<Perfil>) {
                 if (isDestroyed) return
                 val perfil = response.body()
-                if (response.isSuccessful && perfil?.roles?.any { it == "ENTREGA" || it == "ADMINISTRACION" } == true) entregas(s)
+                if (response.isSuccessful && perfil != null && puedeRepartir(perfil)) entregas(s)
                 else { almacen.borrar(); acceso(true) }
             }
 

@@ -48,6 +48,17 @@ class InterfazTest {
         assertTrue(java.time.Duration.between(ahora, LocalDateTime.now(Formato.BOLIVIA)).abs().toMinutes() < 2)
     }
 
+    @Test fun entraQuienPuedeAdministrarEntregas() {
+        fun perfil(roles: List<String>, permisos: List<String>) = Perfil("id", "Nombre", roles, permisos)
+        assertTrue(puedeRepartir(perfil(listOf("ENTREGA"), listOf("entregas.administrar", "frio.administrar"))))
+        // Perfiles de gestión que pueden ser responsables de una entrega (antes la app esperaba el rol ADMINISTRACION, que ya no existe).
+        assertTrue(puedeRepartir(perfil(listOf("ADMINISTRADOR"), listOf("entregas.administrar", "usuarios.consultar"))))
+        assertTrue(puedeRepartir(perfil(listOf("PROPIETARIO"), listOf("entregas.administrar"))))
+        assertTrue(!puedeRepartir(perfil(listOf("PRODUCCION"), listOf("produccion.consultar", "inventario.consultar"))))
+        assertTrue(!puedeRepartir(perfil(listOf("COMPRADOR"), listOf("pedidos.consultar"))))
+        assertTrue(!puedeRepartir(perfil(listOf("ADMINISTRACION"), emptyList())))
+    }
+
     @Test fun momentoDeCapturaEnHoraDeBolivia() {
         // 2026-11-23 13:05 UTC = 09:05 en Bolivia.
         assertEquals("23/11/2026 09:05", FechasPantalla.capturada(java.time.Instant.parse("2026-11-23T13:05:00Z").toEpochMilli()))
