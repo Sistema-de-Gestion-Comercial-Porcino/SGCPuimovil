@@ -32,15 +32,21 @@ En el acceso escribe la URL base, terminada en `/api/v1/`:
 
 - Emulador Android hacia API en el equipo anfitrión: `http://10.0.2.2:5081/api/v1/`.
 - Teléfono físico: `http://IP_DEL_EQUIPO_API:5081/api/v1/` en la misma red; la API debe escuchar en esa interfaz y el firewall permitir la conexión.
-- Servidor desplegado: dirección HTTPS con certificado válido.
+- Servidor desplegado: dirección HTTPS con certificado válido. El teléfono no acepta certificados autofirmados.
 
-También puede configurarse al compilar con `-PSGCP_API_URL=https://servidor/api/v1/`. La edición local se conserva en preferencias. Cambiarla no comparte credenciales de forma automática: el usuario debe iniciar sesión de nuevo.
+También puede configurarse al compilar, para que el APK ya venga apuntando al servidor:
+
+```bash
+./gradlew assembleDebug -PSGCP_API_URL=https://dominio-del-servidor/api/v1/
+```
+
+El APK queda en `app/build/outputs/apk/debug/app-debug.apk`. La edición local se conserva en preferencias. Cambiarla no comparte credenciales de forma automática: el usuario debe iniciar sesión de nuevo.
 
 El APK debug permite HTTP para pruebas en red local. Release solo permite HTTPS. No desactivar la validación de certificados.
 
 ## Funciones
 
-- Acceso contra `POST auth/login` con cuenta ENTREGA o ADMINISTRACION.
+- Acceso contra `POST auth/login` con una cuenta que pueda administrar entregas: el perfil **ENTREGA** y los de gestión que pueden ser responsables de una entrega (ADMINISTRADOR, PROPIETARIO, SUPERADMIN). Se decide por el permiso `entregas.administrar`, no por el nombre del rol.
 - Token cifrado mediante AES-GCM y clave de Android Keystore; no se guarda la contraseña.
 - Verificación de sesión mediante `GET auth/yo`; sesión vencida requiere nuevo acceso.
 - Cierre mediante API, sin borrar almacenamiento de otras funciones.
@@ -75,6 +81,38 @@ Prueba manual del 14 de noviembre de 2026 en un TECNO CK7n con Android 14, contr
 Lo que no cubren las pruebas automáticas y se prueba a mano: modo avión real en el teléfono. Con el cable USB y `adb reverse` el teléfono sigue llegando a la API aunque esté en modo avión, así que esa prueba se hace sin el puente USB.
 
 La ejecución y prueba de acceso en un dispositivo debe documentarse por separado de la compilación del APK. Un build correcto no demuestra el funcionamiento en un teléfono físico.
+
+## Sprint 5 · Interfaz y funciones de apoyo al reparto (S5-P2)
+
+**Diseño.** La app usa los mismos colores y el mismo logo que la web (`SGCPuiweb`, `site.css` e `images/sgcp-logo.png`), para que las dos interfaces se vean como un solo sistema:
+- cabecera verde con el logo;
+- tarjetas con una franja de color según el estado;
+- etiquetas de estado. ENTREGADA va en verde y OBSERVADA en arcilla: distintas, pero ninguna como error. Solo el conflicto va en rojo, porque espera revisión;
+- un resumen con cifras («sin enviar» y «en conflicto»);
+- botones con respuesta al toque.
+
+La app ahora tiene **ícono propio** (adaptativo desde Android 8), generado del mismo logo. Los colores y las reglas de presentación están en `Interfaz.kt`, separados de las pantallas para poder probarlos sin Android.
+
+**Funciones nuevas:**
+- **Indicador «Con señal / Sin señal»** en la cabecera. Sigue a la red en vivo, para que el repartidor sepa si lo que guarda se va a enviar.
+- **Selector de fecha y hora** y botón **«Ahora»** en el formulario de recepción. El selector no deja elegir días futuros, y se puede seguir escribiendo a mano en `dd/mm/aaaa hh:mm`.
+- **Unidad y resultado como botones lado a lado** (kg / g y Conforme / Con observaciones). Con observaciones, el campo pasa a ser obligatorio.
+- **Miniaturas de las fotos** de evidencia. Tocar una pregunta si se quita.
+- **«Llamar» y «Ver en mapa»** en cada entrega. Abren el marcador y la app de mapas del teléfono; no necesitan permisos nuevos.
+- **«Capturas del teléfono»**: lista de cada captura guardada con su estado, receptor, peso, fotos y hora de captura.
+- **El borrador sobrevive a la cámara.** Si Android cierra la app mientras la cámara está abierta (pasa en teléfonos con poca memoria), al volver se recuperan lo escrito y las fotos.
+- **«Atrás» en el formulario** vuelve a la lista y pregunta antes de descartar, en lugar de cerrar la app. Usa `OnBackInvokedCallback` en Android 13 o más.
+- **El teclado no tapa el formulario**: la pantalla se ajusta a la altura del teclado.
+- **Indicador de carga** mientras se comprueba la sesión, y la dirección del servidor plegada bajo «Cambiar» en el acceso.
+
+Pruebas unitarias: **34** (27 anteriores y 7 nuevas en `InterfazTest`). Cubren el tono de cada estado, los enlaces de llamada y mapa, y la fecha del selector convertida a UTC.
+
+Prueba manual del 23 de noviembre de 2026 en el emulador Pixel 3a (Android 17), con cámara emulada, contra la API local y MySQL 8.0:
+1. Con el modo avión real (`cmd connectivity airplane-mode`), el indicador pasó a «Sin señal» en menos de un segundo.
+2. Se registró una recepción con observaciones y una foto, que quedó pendiente con el aviso de que solo está en el teléfono.
+3. Al volver la red se sincronizó sola y quedó OBSERVADA en el servidor.
+4. En otra captura se cerró la app a la fuerza (`am kill`) con la cámara abierta. Al volver seguían lo escrito y las dos fotos. Se quitó una foto tocándola y se guardó: quedó ENTREGADA.
+5. En el servidor quedó una recepción por captura, sin duplicados, con la fecha real y la de sincronización separadas.
 
 ## Ejecución paso a paso
 
@@ -114,6 +152,8 @@ Más reciente arriba.
 
 | Versión | Fecha | Sprint | Cambio | Autor |
 |---|---|---|---|---|
+| v5.2.1 | 2026-11-25 | 5 | Corrección (S-4): el acceso a la app se decide por el permiso `entregas.administrar` y no por el rol ADMINISTRACION, que ya no existe con los perfiles jerárquicos; el README indica cómo compilar el APK apuntando al servidor con `-PSGCP_API_URL` | Angel Sebastian Eguez Mur |
+| v5.2.0 | 2026-11-23 | 5 | Interfaz con los colores y el logo de la web, ícono propio, indicador de señal, selector de fecha y hora, miniaturas de evidencia, llamar y ver en mapa, lista de capturas del teléfono, borrador que sobrevive a la cámara y «Atrás» que no cierra el formulario | Angel Sebastian Eguez Mur |
 | v3.2.0 | 2026-11-14 | 3 | Captura de recepción sin conexión con Room, evidencia privada, cola Command, estados State y sincronización contra `recepciones/sincronizar` | Angel Sebastian Eguez Mur |
 | v1.0.1 | 2026-11-07 | 1 | Corrección: el esquema de versiones aclara que MENOR es el número de parte y que la etiqueta de cierre del sprint es `vN.4.0` | Dario Haziel Tambo Parra |
 | v1.0.0 | 2026-11-06 | 1 | Documentación: la aplicación no accede a la base de datos, de modo que el cambio de motor no la afecta | Dario Haziel Tambo Parra |
